@@ -1,6 +1,8 @@
 # files
 vs.code-workspace
 poetry.lock
+notes.md
 
 # directories
 **/__pycache__/
+**/.pytest_cache/
