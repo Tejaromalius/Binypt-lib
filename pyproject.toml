@@ -28,11 +28,23 @@ datetime = "^5.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
-flake8 = "^6.1.0"
 pytest = "^7.4.1"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+style-doc = "^0.2.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["src/binypt"]
+
+[tool.isort]
+profile="black"
+no_sections = "True"
+length_sort = "True"
+float_to_top = "True"
+order_by_type = "True"
+lines_between_types = "1"
+force_single_line = "True"
+combine_straight_imports = "True"
 
 [build-system]
 requires = ["poetry-core"]
