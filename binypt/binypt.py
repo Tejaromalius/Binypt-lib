@@ -21,9 +21,10 @@ def formatDateTimestamp(date: str, date_format: str):
     return int(stripped_time)
 
 
-def getValidatedPath(output_path: str, condition: bool):
-    assert os.path.exists(output_path) == condition
-    return output_path
+def getValidatedPath(path: str, condition: bool):
+    path = os.path.realpath(path)
+    assert os.path.exists(path) == condition, "path is not valid"
+    return path
 
 
 class Binypt:
@@ -96,6 +97,7 @@ class Binypt:
 
     MILISECONDS = 1000
     DATE_FORMAT = "%d/%m/%Y-%H:%M:%S"
+    METADATA_PATH = "metadata.json"
 
     def __init__(
         self,
@@ -104,7 +106,6 @@ class Binypt:
         starting_date: str,
         ending_date: str,
         output_path: str,
-        metadata_file_path: str,
     ):
         self.trading_pair = trading_pair
         self.interval = interval
@@ -115,7 +116,7 @@ class Binypt:
             formatDateTimestamp(ending_date, Binypt.DATE_FORMAT) * Binypt.MILISECONDS
         )
         self.output_path = getValidatedPath(output_path, False)
-        self.metadata = self._importMetadata(getValidatedPath(metadata_file_path, True))
+        self.metadata = self._importMetadata()
 
         self.data = pd.DataFrame(
             columns=self.metadata.get("chart_default_columns"), dtype=float
@@ -134,8 +135,8 @@ class Binypt:
         elif re.search(r"\.(pickle)$", self.output):
             self.data.to_pickle(self.output)
 
-    def _importMetadata(self, file_path):
-        with open(file_path, "r") as metadata_file:
+    def _importMetadata(self):
+        with open(Binypt.METADATA_PATH, "r") as metadata_file:
             return json.load(metadata_file)
 
     def _update(self):

@@ -6,3 +6,4 @@ notes.md
 # directories
 **/__pycache__/
 **/.pytest_cache/
+dist/
