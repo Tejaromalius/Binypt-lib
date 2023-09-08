@@ -4,9 +4,6 @@ version = "1.2.1"
 description = "Library to download data charts from Binance"
 authors = ["tejaromalius <tayefi.ilia@protonmail.com>"]
 license = "MIT"
-packages = [
-    { include = "binypt", from = "src"}
-]
 readme = "README.md"
 repository = "https://github.com/Tejaromalius/Binypt-lib"
 keywords = ["crypto", "binance"]
@@ -19,8 +16,9 @@ classifiers = [
 	"Programming Language :: Python :: 3.10",
 	"Topic :: Utilities"
 ]
-include = ["resources/metadata.json"]
-
+include = [
+    "LICENSE",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
