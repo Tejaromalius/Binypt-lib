@@ -2,6 +2,7 @@
 vs.code-workspace
 poetry.lock
 notes.md
+.clean.sh
 
 # directories
 **/__pycache__/

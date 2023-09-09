@@ -6,6 +6,8 @@ authors = ["tejaromalius <tayefi.ilia@protonmail.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/Tejaromalius/Binypt-lib"
+include = ["LICENSE"]
+packages = [{include = "binypt"}]
 keywords = ["crypto", "binance"]
 classifiers = [
 	"Development Status :: 5 - Production/Stable",
@@ -15,9 +17,6 @@ classifiers = [
 	"Operating System :: OS Independent",
 	"Programming Language :: Python :: 3.10",
 	"Topic :: Utilities"
-]
-include = [
-    "LICENSE",
 ]
 
 [tool.poetry.dependencies]
@@ -36,7 +35,7 @@ flake8 = "^6.1.0"
 style-doc = "^0.2.0"
 
 [tool.pytest.ini_options]
-pythonpath = ["src/binypt"]
+pythonpath = ["binypt"]
 
 [tool.isort]
 profile="black"

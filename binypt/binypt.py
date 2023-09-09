@@ -21,13 +21,13 @@ def formatDateTimestamp(date: str, date_format: str):
     return int(stripped_time)
 
 
-def getValidatedPath(path: str, condition: bool):
+def getValidatedFilePath(path: str, condition: bool):
     path = os.path.realpath(path)
-    assert os.path.exists(path) == condition, "path is not valid"
+    assert os.path.isfile(path) == condition and os.path.isdir(path) == condition, "path is not valid"
     return path
 
 
-class BinyptLib:
+class Binypt:
     """
     Binypt: A Python Class for Cryptocurrency Data Retrieval and Processing
 
@@ -97,7 +97,7 @@ class BinyptLib:
 
     MILISECONDS = 1000
     DATE_FORMAT = "%d/%m/%Y-%H:%M:%S"
-    METADATA_PATH = "metadata.json"
+    METADATA_PATH = os.path.join(os.path.dirname(__file__), "metadata.json")
 
     def __init__(
         self,
@@ -115,7 +115,7 @@ class BinyptLib:
         self.ending_date = (
             formatDateTimestamp(ending_date, Binypt.DATE_FORMAT) * Binypt.MILISECONDS
         )
-        self.output_path = getValidatedPath(output_path, False)
+        self.output_path = getValidatedFilePath(output_path, False)
         self.metadata = self._importMetadata()
 
         self.data = pd.DataFrame(
@@ -128,12 +128,12 @@ class BinyptLib:
         self._update()
 
     def export(self):
-        if re.search(r"\.(csv)$", self.output):
-            self.data.to_csv(self.output)
-        elif re.search(r"\.(excel)$", self.output):
-            self.data.to_excel(self.output)
-        elif re.search(r"\.(pickle)$", self.output):
-            self.data.to_pickle(self.output)
+        if re.search(r"\.(csv)$", self.output_path):
+            self.data.to_csv(self.output_path)
+        elif re.search(r"\.(excel)$", self.output_path):
+            self.data.to_excel(self.output_path)
+        elif re.search(r"\.(pickle)$", self.output_path):
+            self.data.to_pickle(self.output_path)
 
     def _importMetadata(self):
         with open(Binypt.METADATA_PATH, "r") as metadata_file:
