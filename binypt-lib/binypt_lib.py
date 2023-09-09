@@ -27,7 +27,7 @@ def getValidatedPath(path: str, condition: bool):
     return path
 
 
-class Binypt:
+class BinyptLib:
     """
     Binypt: A Python Class for Cryptocurrency Data Retrieval and Processing
 
