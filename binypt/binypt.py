@@ -11,6 +11,7 @@ import pandas as pd
 import datetime
 import requests
 
+from loguru import logger
 from typing import TextIO
 from .progress_bar import ProgressBar
 from concurrent.futures import ThreadPoolExecutor
@@ -30,7 +31,6 @@ class Binypt:
         interval (str): Time interval (e.g., "1h" for 1-hour).
         starting_date (str): Start date (format: "dd/mm/yyyy-HH:MM:SS").
         ending_date (str): End date (format: "dd/mm/yyyy-HH:MM:SS").
-        output_path (str): File path for exporting data.
         verbosity (list): List of expected verbosity methods.
             Possible values: [logging, bar]. Default: []
 
@@ -58,6 +58,10 @@ class Binypt:
             formatDateTimestamp(ending_date, Binypt.DATE_FORMAT) * Binypt.MILISECONDS
         )
         self.verbosity = verbosity
+
+        if "logging" not in self.verbosity:
+            logger.disable(__name__)
+
         self.metadata = self._importMetadata()
         self.data = pd.DataFrame(
             columns=self.metadata.get("chart_default_columns"), dtype=float
@@ -65,22 +69,34 @@ class Binypt:
         self.batched_timelines = list()
         self.total_timelines = 0
         self._update()
+        logger.info("data is downloaded and set")
 
     def export(
         self, output_path: TextIO, output_extension: str in ["csv", "excel", "pickle"]
     ):
+        """
+            Export downloaded data to a file.
+
+            Arguments:
+                output_path (str): path to a non-existing file (e.g., "my-file.csv").
+                output_extension (str): output file's type.
+                    possible values: 'csv', 'excel', 'pickle'.
+        """
         if output_extension == "csv":
             self.data.to_csv(output_path)
         elif output_extension == "excel":
             self.data.to_excel(output_path)
         elif output_extension == "pickle":
             self.data.to_pickle(output_path)
+        logger.debug(f"data is written to `{output_path}`")
 
     def _importMetadata(self):
         with open(Binypt.METADATA_PATH, "r") as metadata_file:
             return json.load(metadata_file)
+        logger.debug("metadata is imported from local")
 
     def _update(self):
+        logger.debug("updating data")
         self._interpolateTimelines()
         self._downloadData()
         self._optimizeData()
@@ -104,6 +120,7 @@ class Binypt:
 
         if len(batch) != 0:
             self.batched_timelines.append(batch)
+        logger.debug(f"timelines are batched to {self.total_timelines} parts")
 
     def _downloadData(self):
         api_url = (
@@ -116,6 +133,7 @@ class Binypt:
         )
 
         def retreiveBatchedData(batch, batch_ix):
+            logger.debug("downloading batched timelines")
             while True:
                 bar.goto(batch_ix * 1000)
                 thread_pool = ThreadPoolExecutor()
@@ -157,6 +175,7 @@ class Binypt:
             ).astype(float)
             self.data = pd.concat([self.data, binance_data_df], ignore_index=True)
         bar.finish()
+        logger.debug("batched timelines are downloaded")
 
     def _optimizeData(self):
         end_point = 0
@@ -167,6 +186,7 @@ class Binypt:
                 break
 
         self.data = self.data.iloc[: end_point + 1]
+        logger.debug("data is cleared and optimized")
 
     def _addHRTime(self):
         self.data["open_time_str"] = [
@@ -177,3 +197,4 @@ class Binypt:
             datetime.datetime.fromtimestamp(time_record / Binypt.MILISECONDS)
             for time_record in self.data["close_time"]
         ]
+        logger.debug("human readible timestamp is added to data")

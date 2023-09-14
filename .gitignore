@@ -1,9 +1,9 @@
 # files
-vs.code-workspace
-poetry.lock
 notes.md
+poetry.lock
+vs.code-workspace
 
 # directories
+dist/
 **/__pycache__/
 **/.pytest_cache/
-dist/

@@ -1,12 +1,18 @@
-## Binypt: A Python Library for Cryptocurrency Data Retrieval and Processing
+# Binypt: A Python Library for Cryptocurrency Data Retrieval and Processing
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Verion](https://img.shields.io/badge/version-1.1.0-red)
-
+![version](https://img.shields.io/badge/version-1.2.0-white?labelColor=purple&style=flat)
 
 ## Overview
 
 **Binypt** is a Python library designed for retrieving historical cryptocurrency price data from the Binance exchange. It allows you to specify trading pairs, time intervals, and date ranges to download and work with historical price data efficiently. This library is a helpful tool for anyone interested in analyzing or visualizing cryptocurrency price trends.
+
+## Features
+
+- Retrieve historical cryptocurrency price data from Binance.
+- Specify trading pairs, time intervals, and date ranges.
+- Export data in various formats such as CSV, Excel, or Pickle.
+- Access data as a Pandas DataFrame for easy analysis.
 
 ## Installation
 
@@ -28,12 +34,14 @@ trading_pair = "BTCUSDT"
 interval = "1h"
 starting_date = "01/01/2023-00:00:00"
 ending_date = "01/31/2023-23:59:59"
-output_path = "btc_price_data.csv"
+verbosity = ["bar", "logging"]
 
-binypt = Binypt(trading_pair, interval, starting_date, ending_date, output_path)
+binypt = Binypt(trading_pair, interval, starting_date, ending_date, verbosity)
 
 # Download and process the data
-binypt.export()
+output_path = "my_file.csv"
+output_file_extension = "csv"
+binypt.export(output_path, output_file_extension)
 
 # Access the data as a Pandas DataFrame
 price_data = binypt.data
@@ -41,16 +49,9 @@ price_data = binypt.data
 # You can now perform various data analysis or visualization tasks with the price_data DataFrame
 ```
 
-## Features
-
-- Retrieve historical cryptocurrency price data from Binance.
-- Specify trading pairs, time intervals, and date ranges.
-- Export data in various formats such as CSV, Excel, or Pickle.
-- Access data as a Pandas DataFrame for easy analysis.
-
 ## Contributions
 
-Contributions to this project are welcome. Feel free to submit bug reports, feature requests, or pull requests on the [GitHub repository](https://github.com/iliatayefi/Binypt).
+Contributions to this project are welcome. Feel free to submit bug reports, feature requests, or pull requests!
 
 ---
 

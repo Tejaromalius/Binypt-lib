@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "binypt-lib"
-version = "1.1.0"
+version = "1.2.0"
 description = "Library to download data charts from Binance"
 authors = ["tejaromalius <tayefi.ilia@protonmail.com>"]
 license = "MIT"
@@ -26,6 +26,7 @@ pandas = "^2.1.0"
 progress = "^1.6"
 requests = "^2.31.0"
 datetime = "^5.2"
+loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
