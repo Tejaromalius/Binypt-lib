@@ -1,68 +1,56 @@
-## Binypt: A Python Class for Cryptocurrency Data Retrieval and Processing
+## Binypt: A Python Library for Cryptocurrency Data Retrieval and Processing
 
-**Copyright (c) 2023 ilia tayefi**
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Verion](https://img.shields.io/badge/version-1.1.0-red)
 
-**License:** [MIT License](https://opensource.org/licenses/MIT)
 
-### Overview
+## Overview
 
-The **Binypt** class is a Python implementation designed for retrieving and processing cryptocurrency market data from the Binance exchange. It provides functionality for downloading, processing, and storing historical price data for a specified cryptocurrency trading pair. The code is released under the MIT License, allowing users to modify and distribute it as needed.
+**Binypt** is a Python library designed for retrieving historical cryptocurrency price data from the Binance exchange. It allows you to specify trading pairs, time intervals, and date ranges to download and work with historical price data efficiently. This library is a helpful tool for anyone interested in analyzing or visualizing cryptocurrency price trends.
 
-### Features
+## Installation
 
-1. **Data Retrieval:** The class leverages the Binance API to fetch historical price data for a given trading pair and time period.
-2. **Data Processing:** The retrieved data is processed and organized into a Pandas DataFrame for further analysis and manipulation.
-3. **Batched Retrieval:** To efficiently retrieve large sets of data, the class splits the desired time period into smaller batches and concurrently retrieves data for each batch.
-4. **Progress Tracking:** The progress of data retrieval is tracked using the `progress.bar` library, providing feedback on the status of data retrieval.
-5. **Data Optimization:** The retrieved data is optimized to ensure it only includes records within the desired time period, eliminating unnecessary data.
-6. **Human-Readable Time:** The class adds human-readable time representations to the DataFrame, making it easier to interpret time-related data.
+You can install Binypt using `pip`:
 
-### Class Initialization
+```bash
+pip install binypt-lib
+```
 
-The **Binypt** class can be initialized with the following parameters:
+## Usage
 
-- `market_name` (default: "BTCUSDT"): The trading pair symbol for which the data will be retrieved.
-- `market_period` (default: "THC"): The desired time interval for data retrieval (e.g., "12h" for 12-hour intervals).
-- `starting_date` (default: "2022-01-01/00:00:00"): The start date and time for data retrieval.
-- `ending_date` (default: "2023-01-01/00:00:00"): The end date and time for data retrieval.
+Here's a brief overview of how to use Binypt:
 
-### Class Methods
+```python
+from binypt import Binypt
 
-1. `getData()`: Returns the processed data as a Pandas DataFrame.
-2. `update()`: Initiates the data retrieval and processing workflow, updating the stored data.
-3. `writeDataToPickle(file_path)`: Writes the processed data to a pickle file specified by `file_path`.
+# Initialize Binypt with your desired parameters
+trading_pair = "BTCUSDT"
+interval = "1h"
+starting_date = "01/01/2023-00:00:00"
+ending_date = "01/31/2023-23:59:59"
+output_path = "btc_price_data.csv"
 
-### Internal Methods
+binypt = Binypt(trading_pair, interval, starting_date, ending_date, output_path)
 
-1. `_interpolateTimelines(jump)`: Divides the desired time period into smaller time intervals (batches) based on the provided `jump`.
-2. `_downloadData(interval)`: Downloads historical price data for each batched time interval using the Binance API.
-3. `_optimizeData()`: Removes data records that fall outside the desired time period.
-4. `_addHumanReadableTime()`: Adds human-readable time representations to the DataFrame.
+# Download and process the data
+binypt.export()
 
-### Usage
+# Access the data as a Pandas DataFrame
+price_data = binypt.data
 
-To use the **Binypt** class, follow these steps:
+# You can now perform various data analysis or visualization tasks with the price_data DataFrame
+```
 
-1. Initialize an instance of the class with desired parameters.
-2. Call the `update()` method to retrieve and process the data.
-3. Access the processed data using the `getData()` method or write it to a file using the `writeData(file_path)` method.
+## Features
 
-### Dependencies
+- Retrieve historical cryptocurrency price data from Binance.
+- Specify trading pairs, time intervals, and date ranges.
+- Export data in various formats such as CSV, Excel, or Pickle.
+- Access data as a Pandas DataFrame for easy analysis.
 
-The code relies on the following Python libraries:
+## Contributions
 
-- `time`: Standard Python time-related functions.
-- `requests`: Library for making HTTP requests.
-- `numpy`: Library for numerical operations.
-- `pandas`: Library for data manipulation and analysis.
-- `progress.bar`: Library for displaying progress bars.
-- `datetime`: Standard Python datetime-related functions.
-- `binance.spot.Spot`: Binance API wrapper for spot market data retrieval.
-- `concurrent.futures.ThreadPoolExecutor`: Library for concurrent execution of tasks.
-
-### Conclusion
-
-The **Binypt** class provides a convenient way to retrieve, process, and manage historical cryptocurrency market data. It can be used for various purposes, such as backtesting trading strategies, conducting data analysis, and generating visualizations based on historical price trends.
+Contributions to this project are welcome. Feel free to submit bug reports, feature requests, or pull requests on the [GitHub repository](https://github.com/iliatayefi/Binypt).
 
 ---
 

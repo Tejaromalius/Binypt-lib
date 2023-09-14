@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "binypt-lib"
-version = "0.1.0"
+version = "1.1.0"
 description = "Library to download data charts from Binance"
 authors = ["tejaromalius <tayefi.ilia@protonmail.com>"]
 license = "MIT"
-packages = [{include = "src/binypt" }, {include = "resources" }]
 readme = "README.md"
 repository = "https://github.com/Tejaromalius/Binypt-lib"
+include = ["LICENSE"]
+packages = [{include = "binypt"}]
 keywords = ["crypto", "binance"]
 classifiers = [
 	"Development Status :: 5 - Production/Stable",
@@ -19,7 +20,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.10.x"
 numpy = "^1.25.2"
 pandas = "^2.1.0"
 progress = "^1.6"
@@ -28,11 +29,23 @@ datetime = "^5.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
-flake8 = "^6.1.0"
 pytest = "^7.4.1"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+style-doc = "^0.2.0"
 
 [tool.pytest.ini_options]
-pythonpath = ["src/binypt"]
+pythonpath = ["."]
+
+[tool.isort]
+profile="black"
+no_sections = "True"
+length_sort = "True"
+float_to_top = "True"
+order_by_type = "True"
+lines_between_types = "1"
+force_single_line = "True"
+combine_straight_imports = "True"
 
 [build-system]
 requires = ["poetry-core"]
