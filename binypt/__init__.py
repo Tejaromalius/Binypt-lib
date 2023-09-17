@@ -1,6 +1,5 @@
 from .binypt import Binypt
-from .progress_bar import ProgressBar
 
-__all__ = ["Binypt", "ProgressBar"]
+__all__ = ["Binypt"]
 
-del binypt, progress_bar
+del binypt

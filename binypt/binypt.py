@@ -1,200 +1,174 @@
-# Copyright (c) 2023 ilia tayefi
-#
-# This software is released under the MIT License.
-# https://opensource.org/licenses/MIT
-
 import os
-import json
-import time
-import numpy as np
+import re
 import pandas as pd
 import datetime
-import requests
 
 from loguru import logger
-from typing import TextIO
-from .progress_bar import ProgressBar
-from concurrent.futures import ThreadPoolExecutor
+from .retriever import Retriever
+from .metadata.client import Client as MetadataClient
+from .progress_bar_wrapper import ProgressBarWrapper
 
 
-def formatDateTimestamp(date: str, date_format: str):
-    stripped_time = datetime.datetime.strptime(date, date_format).timestamp()
-    return int(stripped_time)
+class Decorators:
+    def run_if_arguments_set(method):
+        def wrapper(self, *args, **kwargs):
+            assert (
+                self.trading_pair is not None
+                and self.interval is not None
+                and self.open_time is not None
+                and self.close_time is not None,
+                "Set arguments first before fetching!",
+            )
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    def run_if_data_retrieved(method):
+        def wrapper(self, *args, **kwargs):
+            assert len(self.data) != 0, "No data set to operate on!"
+            return method(self, *args, **kwargs)
+
+        return wrapper
+
+    def run_if_arguments_valid(method):
+        def wrapper(
+            self,
+            trading_pair: str,
+            interval: str,
+            start_date: str,
+            close_date: str,
+        ):
+
+            assert (
+                self.metadata.get_trading_pair(trading_pair) is not None,
+                "Trading pair is not found in the metadata!",
+            )
+            assert (
+                self.metadata.get_interval(interval) is not None,
+                "Interval is invalid!",
+            )
+            assert (
+                self.metadata.get_date_timestamp(start_date) is not None,
+                "Start date is of wrong format!",
+            )
+            assert (
+                self.metadata.get_date_timestamp(start_date) is not None,
+                "Start date is of wrong format!",
+            )
+            return method(self, trading_pair, interval, start_date, close_date)
+
+        return wrapper
 
 
 class Binypt:
     """
-    Binypt is a Python library for fetching cryptocurrency price data from Binance.
+    Binypt is a library for fetching cryptocurrency price data from Binance.
 
-    Attributes:
-        trading_pair (str): Cryptocurrency pair (e.g., "BTCUSDT").
-        interval (str): Time interval (e.g., "1h" for 1-hour).
-        starting_date (str): Start date (format: "dd/mm/yyyy-HH:MM:SS").
-        ending_date (str): End date (format: "dd/mm/yyyy-HH:MM:SS").
-        verbosity (list): List of expected verbosity methods.
-            Possible values: [logging, bar]. Default: []
-
-    Methods: export(): Save data as CSV, Excel, or Pickle.
+    Methods:
+    __init__(): Initialize Binypt object.
+    set_arguments(): Set trading pair, interval, open date, and close date.
+    retrieve_data(): Fetch cryptocurrency price data from Binance API.
+    export(): Export downloaded data to a file.
+    add_human_readable_time(): Add human-readable timestamps to the data.
+    set_verbosity(): Set verbosity options.
     """
 
-    MILISECONDS = 1000
-    DATE_FORMAT = "%d/%m/%Y-%H:%M:%S"
-    METADATA_PATH = os.path.join(os.path.dirname(__file__), "metadata.json")
+    def __init__(self):
+        self.metadata = MetadataClient()
+        self.retriever = Retriever(self)
+        self.bar = ProgressBarWrapper()
 
-    def __init__(
+        self.batched_timelines = list()
+        self.data = pd.DataFrame(
+            columns=self.metadata.get_chart_columns(),
+            dtype=float,
+        )
+
+    @Decorators.run_if_arguments_valid
+    def set_arguments(
         self,
         trading_pair: str,
         interval: str,
-        starting_date: str,
-        ending_date: str,
-        verbosity: list = [],
+        open_date: str,
+        close_date: str,
     ):
-        self.trading_pair = trading_pair
+        """
+        Set trading pair, interval, open date, and close date.
+
+        Arguments:
+            trading_pair (str): Cryptocurrency pair (e.g., "BTCUSDT").
+            interval (str): Time interval (e.g., "1h" for 1-hour).
+            open_date (str): Start date (format: "dd/mm/yyyy-HH:MM:SS").
+            close_date (str): End date (format: "dd/mm/yyyy-HH:MM:SS").
+        """
+
         self.interval = interval
-        self.starting_date = (
-            formatDateTimestamp(starting_date, Binypt.DATE_FORMAT) * Binypt.MILISECONDS
-        )
-        self.ending_date = (
-            formatDateTimestamp(ending_date, Binypt.DATE_FORMAT) * Binypt.MILISECONDS
-        )
-        self.verbosity = verbosity
+        self.trading_pair = trading_pair
+        self.open_time = self.metadata.get_date_timestamp(open_date)
+        self.close_time = self.metadata.get_date_timestamp(close_date)
 
-        if "logging" not in self.verbosity:
-            logger.disable(__name__)
+    @Decorators.run_if_arguments_set
+    def retrieve_data(self):
+        """ Fetch cryptocurrency price data from Binance API. """
+        logger.debug("Fetching new data from Binance API")
+        self.retriever.run()
+        logger.info("Data is downloaded and set")
 
-        self.metadata = self._importMetadata()
-        self.data = pd.DataFrame(
-            columns=self.metadata.get("chart_default_columns"), dtype=float
-        )
-        self.batched_timelines = list()
-        self.total_timelines = 0
-        self._update()
-        logger.info("data is downloaded and set")
+    @Decorators.run_if_data_retrieved
+    def get_data(self):
+        return self.data
 
-    def export(
-        self, output_path: TextIO, output_extension: str in ["csv", "excel", "pickle"]
-    ):
+    @Decorators.run_if_data_retrieved
+    def export(self, output_path: str):
         """
-            Export downloaded data to a file.
+        Export downloaded data to a file.
 
-            Arguments:
-                output_path (str): path to a non-existing file (e.g., "my-file.csv").
-                output_extension (str): output file's type.
-                    possible values: 'csv', 'excel', 'pickle'.
+        Arguments:
+            output_path (str): absolute path to a non-existing file.
+                possible file extensions: '.csv', '.excel', '.pickle'.
         """
-        if output_extension == "csv":
+        output_path = os.path.expanduser(output_path)
+        logger.debug(f"Output file specified as: {output_path}")
+        file_format = re.search("(csv)|(excel)|(pickle)$", output_path).group()
+
+        if file_format == "csv":
             self.data.to_csv(output_path)
-        elif output_extension == "excel":
+            logger.debug(f"Data is written to `{output_path}`")
+
+        elif file_format == "excel":
             self.data.to_excel(output_path)
-        elif output_extension == "pickle":
+            logger.debug(f"Data is written to `{output_path}`")
+
+        elif file_format == "pickle":
             self.data.to_pickle(output_path)
-        logger.debug(f"data is written to `{output_path}`")
+            logger.debug(f"Data is written to `{output_path}`")
 
-    def _importMetadata(self):
-        with open(Binypt.METADATA_PATH, "r") as metadata_file:
-            return json.load(metadata_file)
-        logger.debug("metadata is imported from local")
+        else:
+            assert "Output path does not specify a file format!"
 
-    def _update(self):
-        logger.debug("updating data")
-        self._interpolateTimelines()
-        self._downloadData()
-        self._optimizeData()
-        self._addHRTime()
-
-    def _interpolateTimelines(self):
-        jump = eval(self.metadata.get("intervals").get(self.interval))
-        last_timeline = self.starting_date - jump
-
-        batch = list()
-
-        while last_timeline + jump < self.ending_date:
-            if len(batch) == 1000:
-                self.batched_timelines.append(batch)
-                batch = list()
-
-            batch.append([(last_timeline + jump), (last_timeline + jump * 2)])
-
-            self.total_timelines += 1
-            last_timeline += jump + 1
-
-        if len(batch) != 0:
-            self.batched_timelines.append(batch)
-        logger.debug(f"timelines are batched to {self.total_timelines} parts")
-
-    def _downloadData(self):
-        api_url = (
-            "https://api.binance.com/api/v3/klines?symbol="
-            + f"{self.trading_pair}&interval={self.interval}&limit=1000&"
-            + "startTime={}&endTime={}"
-        )
-        bar = ProgressBar(
-            self.total_timelines, True if "bar" in self.verbosity else False
-        )
-
-        def retreiveBatchedData(batch, batch_ix):
-            logger.debug("downloading batched timelines")
-            while True:
-                bar.goto(batch_ix * 1000)
-                thread_pool = ThreadPoolExecutor()
-
-                try:
-                    urls = list(
-                        api_url.format(timeline[0], timeline[1]) for timeline in batch
-                    )
-                    api_requests = list(
-                        thread_pool.submit(lambda url: requests.get(url).json(), (url))
-                        for url in urls
-                    )
-
-                    for request in api_requests:
-                        bar.next()
-                        while request._state == "RUNNING":
-                            time.sleep(0.25)
-
-                    return list(
-                        request.result()
-                        for request in api_requests
-                        if len(request.result()) != 0
-                    )
-
-                except Exception:
-                    continue
-
-        for batch_ix, batch in enumerate(self.batched_timelines):
-            binance_data = np.array(
-                [
-                    data
-                    for batched_data in retreiveBatchedData(batch, batch_ix)
-                    for data in batched_data
-                ]
-            )
-            binance_data_df = pd.DataFrame(
-                binance_data,
-                columns=self.metadata.get("chart_default_columns"),
-            ).astype(float)
-            self.data = pd.concat([self.data, binance_data_df], ignore_index=True)
-        bar.finish()
-        logger.debug("batched timelines are downloaded")
-
-    def _optimizeData(self):
-        end_point = 0
-
-        for index in range(1, len(self.data)):
-            if self.data.iloc[-index]["close_time"] < self.ending_date:
-                end_point = len(self.data) - index
-                break
-
-        self.data = self.data.iloc[: end_point + 1]
-        logger.debug("data is cleared and optimized")
-
-    def _addHRTime(self):
-        self.data["open_time_str"] = [
-            datetime.datetime.fromtimestamp(time_record / Binypt.MILISECONDS)
-            for time_record in self.data["open_time"]
+    @Decorators.run_if_data_retrieved
+    def add_human_readable_time(self):
+        """ Add human-readable timestamps to the data. """
+        self.data["open_date"] = [
+            datetime.datetime.fromtimestamp(open_time / miliseconds)
+            for open_time in self.data["open_time"]
         ]
-        self.data["close_time_str"] = [
-            datetime.datetime.fromtimestamp(time_record / Binypt.MILISECONDS)
-            for time_record in self.data["close_time"]
+        self.data["close_date"] = [
+            datetime.datetime.fromtimestamp(close_time / miliseconds)
+            for close_time in self.data["close_time"]
         ]
-        logger.debug("human readible timestamp is added to data")
+        logger.debug("Human-readable timestamp is added to data")
+
+    def set_verbosity(self, show_bar: bool = False, show_log: bool = False):
+        """
+        Set verbosity options.
+
+        Arguments:
+            show_bar (bool, optional): Whether to show a progress bar.
+                Default is False.
+            show_log (bool, optional): Whether to show log messages.
+                Default is False.
+        """
+        self.bar.change_status(True if show_bar else False)
+        if not show_log:
+            logger.disable(__name__)

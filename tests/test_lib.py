@@ -1,21 +1,38 @@
 import os
+import pytest
 
 from binypt import Binypt
 
 
-def test_functionality():
-    binypt_obj = Binypt("BTCUSDT", "3d", "01/01/2023-00:00:00", "01/03/2023-00:00:00")
-    assert type(binypt_obj) is Binypt, "object could not be initialized"
-    del binypt_obj
+pytest.mark.filterwarnings("ignore::pytest.PytestAssertRewriteWarning")
 
 
-def test_exporting():
-    binypt_obj = Binypt("BTCUSDT", "3d", "01/01/2023-00:00:00", "01/03/2023-00:00:00")
-    output_path = "test_file.csv"
-    with open(output_path, "w") as test_file:
-        binypt_obj.export(test_file, "csv")
+@pytest.fixture
+def binypt_instance():
+    binypt = Binypt()
+    binypt.set_arguments(
+        "BTCUSDT",
+        "3d",
+        "01/01/2023-00:00:00",
+        "01/03/2023-00:00:00",
+    )
+    binypt.retrieve_data()
+    yield binypt
+
+
+def test_functionality(binypt_instance):
     assert (
-        os.path.exists(output_path) is True and os.path.getsize(output_path) != 0
-    ), "test file could not be written"
-    os.remove("test_file.csv")
-    del binypt_obj
+        isinstance(binypt_instance, Binypt),
+        "Object could not be initialized",
+    )
+
+
+def test_exporting(binypt_instance):
+    output_path = "test_file.csv"
+    binypt_instance.export(output_path)
+    assert (
+        os.path.exists(output_path)
+        and os.path.getsize(output_path) != 0,
+        "Test file could not be written",
+    )
+    os.remove(output_path)
