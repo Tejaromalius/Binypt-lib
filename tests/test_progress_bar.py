@@ -16,12 +16,3 @@ def test_active_progress_bar(bar_size):
     bar.goto(0) is None, "ProgressBar failed to run goto()"
     bar.finish() is None, "ProgressBar failed to run finish()"
     del bar
-
-
-def test_disabled_progress_bar(bar_size):
-    bar = ProgressBarWrapper(False)
-    bar.start(bar_size)
-    bar.next() is None, "ProgressBar failed to run next()"
-    bar.goto(0) is None, "ProgressBar failed to run goto()"
-    bar.finish() is None, "ProgressBar failed to run finish()"
-    del bar

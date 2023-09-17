@@ -2,7 +2,7 @@ import os
 import json
 import datetime
 
-from loguru import logger
+from .. import logger
 
 METADATA_PATH = os.path.join(os.path.dirname(__file__), "metadata.json")
 
@@ -13,7 +13,7 @@ class Client:
         and providing utility methods.
 
     Methods:
-        get_trading_pair(): Get the full name of a trading pair.
+        check_trading_pair_exists(): Get the full name of a trading pair.
         get_interval(): Get the interval duration in milliseconds.
         get_chart_columns(): Get the column names for price chart data.
         get_date_timestamp(): Convert a date to a timestamp in milliseconds.
@@ -22,7 +22,7 @@ class Client:
         self.metadata = None
         self._loadMetadata()
 
-    def get_trading_pair(self, trading_pair: str):
+    def check_trading_pair_exists(self, trading_pair: str):
         """
         Get the full name of a trading pair.
 
@@ -30,7 +30,11 @@ class Client:
             trading_pair (str): The abbreviated trading pair (e.g., "BTCUSDT").
         """
         logger.debug(f"Getting full name for trading pair: {trading_pair}")
-        return self.metadata.get(trading_pair, None)
+        trading_pairs = self.metadata.get("trading_pairs", None)
+        if trading_pairs.count(trading_pair) != 0:
+            return True
+        else:
+            return False
 
     def get_interval(self, interval):
         """
@@ -44,7 +48,7 @@ class Client:
         if interval:
             interval_ms = eval(interval)
             logger.debug(
-                f"Converted interval {interval}"
+                f"Converted interval {interval} "
                 f"to milliseconds: {interval_ms}"
             )
             return interval_ms

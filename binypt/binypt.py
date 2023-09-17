@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import datetime
 
-from loguru import logger
+from . import logger
 from .retriever import Retriever
 from .metadata.client import Client as MetadataClient
 from .progress_bar_wrapper import ProgressBarWrapper
@@ -12,13 +12,12 @@ from .progress_bar_wrapper import ProgressBarWrapper
 class Decorators:
     def run_if_arguments_set(method):
         def wrapper(self, *args, **kwargs):
-            assert (
-                self.trading_pair is not None
-                and self.interval is not None
-                and self.open_time is not None
-                and self.close_time is not None,
-                "Set arguments first before fetching!",
-            )
+            assert self.trading_pair is not None \
+                and self.interval is not None \
+                and self.open_time is not None \
+                and self.close_time is not None, \
+                "Set arguments first before fetching!"
+
             return method(self, *args, **kwargs)
 
         return wrapper
@@ -35,27 +34,23 @@ class Decorators:
             self,
             trading_pair: str,
             interval: str,
-            start_date: str,
+            open_date: str,
             close_date: str,
         ):
+            tp_exists = self.metadata.check_trading_pair_exists(trading_pair)
+            assert tp_exists is True, \
+                "Trading pair is not found in the metadata!"
 
-            assert (
-                self.metadata.get_trading_pair(trading_pair) is not None,
-                "Trading pair is not found in the metadata!",
-            )
-            assert (
-                self.metadata.get_interval(interval) is not None,
-                "Interval is invalid!",
-            )
-            assert (
-                self.metadata.get_date_timestamp(start_date) is not None,
-                "Start date is of wrong format!",
-            )
-            assert (
-                self.metadata.get_date_timestamp(start_date) is not None,
-                "Start date is of wrong format!",
-            )
-            return method(self, trading_pair, interval, start_date, close_date)
+            assert self.metadata.get_interval(interval) is not None, \
+                "Interval is invalid!"
+
+            assert self.metadata.get_date_timestamp(open_date) is not None, \
+                "Start date is of wrong format!"
+
+            assert self.metadata.get_date_timestamp(close_date) is not None, \
+                "Start date is of wrong format!"
+
+            return method(self, trading_pair, interval, open_date, close_date)
 
         return wrapper
 
@@ -106,6 +101,7 @@ class Binypt:
         self.trading_pair = trading_pair
         self.open_time = self.metadata.get_date_timestamp(open_date)
         self.close_time = self.metadata.get_date_timestamp(close_date)
+        logger.info("API arguments are set")
 
     @Decorators.run_if_arguments_set
     def retrieve_data(self):
@@ -149,6 +145,7 @@ class Binypt:
     @Decorators.run_if_data_retrieved
     def add_human_readable_time(self):
         """ Add human-readable timestamps to the data. """
+        miliseconds = 1000
         self.data["open_date"] = [
             datetime.datetime.fromtimestamp(open_time / miliseconds)
             for open_time in self.data["open_time"]
@@ -170,5 +167,5 @@ class Binypt:
                 Default is False.
         """
         self.bar.change_status(True if show_bar else False)
-        if not show_log:
-            logger.disable(__name__)
+        if show_log:
+            logger.enable("binypt")

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from loguru import logger
+from . import logger
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -47,11 +47,6 @@ class Retriever:
 
         if len(batch) != 0:
             self.binypt.batched_timelines.append(batch)
-
-        logger.debug(
-            "Interpolation completed."
-            f"{len(self.binypt.batched_timelines)} batches created."
-        )
 
     def _download_data(self):
         bar_size = self.__size_batched_timelines(self.binypt.batched_timelines)
@@ -112,7 +107,6 @@ class Retriever:
         while True:
             self.binypt.bar.goto(batch_ix * 1000)
             thread_pool = ThreadPoolExecutor()
-
             try:
                 api_requests = list(
                     thread_pool.submit(
@@ -131,9 +125,9 @@ class Retriever:
                     if len(request.result()) != 0
                 )
 
-            except Exception:
+            except Exception as error:
                 logger.error(
-                    f"Error while downloading batch {batch_ix}: {str(e)}"
+                    f"Error while downloading batch {batch_ix}: {str(error)}"
                 )
                 continue
 
