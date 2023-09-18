@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "binypt-lib"
-version = "2.2.0"
+version = "2.2.1"
 description = "Library to download data charts from Binance"
 authors = ["ilia tayefi <tayefi.ilia@protonmail.com>"]
 license = "MIT"
@@ -16,11 +16,11 @@ classifiers = [
 	"Natural Language :: English",
 	"Operating System :: OS Independent",
 	"Programming Language :: Python :: 3.10",
-	"Topic :: Utilities"
+	"Topic :: Software Development :: Libraries"
 ]
 
 [tool.poetry.dependencies]
-python = "3.10.x"
+python = "^3.10"
 numpy = "^1.25.2"
 pandas = "^2.1.0"
 progress = "^1.6"
