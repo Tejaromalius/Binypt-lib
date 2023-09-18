@@ -5,7 +5,7 @@ import datetime
 
 from . import logger
 from .retriever import Retriever
-from .metadata.client import Client as MetadataClient
+from .metadata.parser import Parser as MetadataParser
 from .progress_bar_wrapper import ProgressBarWrapper
 
 
@@ -41,7 +41,7 @@ class Decorators:
             assert tp_exists is True, \
                 "Trading pair is not found in the metadata!"
 
-            assert self.metadata.get_interval(interval) is not None, \
+            assert self.metadata.check_interval_exists(interval) is not None, \
                 "Interval is invalid!"
 
             assert self.metadata.get_date_timestamp(open_date) is not None, \
@@ -69,11 +69,11 @@ class Binypt:
     """
 
     def __init__(self):
-        self.metadata = MetadataClient()
+        self.metadata = MetadataParser()
         self.retriever = Retriever(self)
         self.bar = ProgressBarWrapper()
 
-        self.batched_timelines = list()
+        self.timelines = list()
         self.data = pd.DataFrame(
             columns=self.metadata.get_chart_columns(),
             dtype=float,
@@ -125,20 +125,21 @@ class Binypt:
         """
         output_path = os.path.expanduser(output_path)
         logger.debug(f"Output file specified as: {output_path}")
-        file_format = re.search("(csv)|(excel)|(pickle)$", output_path).group()
+        file_format = re.search("(csv)|(excel)|(pickle)$", output_path)
 
-        if file_format == "csv":
-            self.data.to_csv(output_path)
-            logger.debug(f"Data is written to `{output_path}`")
+        if file_format is not None:
+            file_format = file_format.group()
+            if file_format == "csv":
+                self.data.to_csv(output_path)
+                logger.debug(f"Data is written to `{output_path}`")
 
-        elif file_format == "excel":
-            self.data.to_excel(output_path)
-            logger.debug(f"Data is written to `{output_path}`")
+            elif file_format == "excel":
+                self.data.to_excel(output_path)
+                logger.debug(f"Data is written to `{output_path}`")
 
-        elif file_format == "pickle":
-            self.data.to_pickle(output_path)
-            logger.debug(f"Data is written to `{output_path}`")
-
+            elif file_format == "pickle":
+                self.data.to_pickle(output_path)
+                logger.debug(f"Data is written to `{output_path}`")
         else:
             assert "Output path does not specify a file format!"
 

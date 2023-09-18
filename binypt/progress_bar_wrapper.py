@@ -19,22 +19,9 @@ class ProgressBarWrapper(Bar):
             Change the status of the progress bar (active or inactive).
         start(): Start the progress bar with a specified size.
     """
-    def __init__(
-        self,
-        is_active: bool = False,
-        message: str = "Downloaded: ",
-        suffix: str = " retrieved %(index)d/%(max)d",
-        *args,
-        **kwargs,
-    ):
-
-        super().__init__(message=message, suffix=suffix, *args, **kwargs)
+    def __init__(self, is_active: bool = False):
         self.is_active = is_active
-
-        for attr_name in dir(self):
-            attr = getattr(self, attr_name)
-            if inspect.isfunction(attr):
-                setattr(self, attr_name, self.__run_if_active(attr))
+        self._update_masks()
 
     def change_status(self, is_active: bool):
         """
@@ -45,21 +32,37 @@ class ProgressBarWrapper(Bar):
                 Indicates whether the progress bar should be active.
         """
         self.is_active = is_active
+        self._update_masks()
 
-    def start(self, bar_size):
+    def start(self, *args, **kwargs):
         """
-        Start the progress bar with a specified size.
+        Start the progress bar.
 
-        Arguments:
-            bar_size: Size of the progress bar.
+        Args:
+            *args, **kwargs
         """
-        self.max = bar_size
+        super().__init__(*args, **kwargs)
 
-    def __run_if_active(self, method):
+    def _update_masks(self):
+        valid_attr_names = [
+            attr_name for attr_name in dir(self)
+            if not attr_name.startswith("_")
+            and attr_name in dir(Bar)
+        ]
+
+        for attr_name in valid_attr_names:
+            try:
+                attr = getattr(self, attr_name)
+            except Exception:
+                attr = getattr(Bar, attr_name)
+            if inspect.ismethod(attr):
+                setattr(self, attr_name, self._run_if_active(attr))
+
+    def _run_if_active(self, method):
         @wraps(method)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(*args, **kwargs):
             if self.is_active:
-                return method(self, *args, **kwargs)
+                return method(*args, **kwargs)
             else:
                 pass
         return wrapper

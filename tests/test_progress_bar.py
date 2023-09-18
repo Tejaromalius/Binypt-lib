@@ -1,18 +1,15 @@
-import pytest
-
 from binypt.progress_bar_wrapper import ProgressBarWrapper
 
 
-@pytest.fixture
-def bar_size():
-    yield 10
-
-
-def test_active_progress_bar(bar_size):
-    bar = ProgressBarWrapper(True)
-    bar.start(bar_size)
+def test_active_progress_bar(bar_size: int = 10):
+    bar = ProgressBarWrapper()
+    bar.change_status(True)
+    bar.start(
+        message="Downloaded: ",
+        suffix=" retrieved %(index)d/%(max)d",
+        max=bar_size,
+    )
     for _ in range(bar_size):
-        bar.next() is None, "ProgressBar failed to run next()"
-    bar.goto(0) is None, "ProgressBar failed to run goto()"
-    bar.finish() is None, "ProgressBar failed to run finish()"
-    del bar
+        bar.next()
+    bar.goto(0)
+    bar.finish()

@@ -7,9 +7,9 @@ from .. import logger
 METADATA_PATH = os.path.join(os.path.dirname(__file__), "metadata.json")
 
 
-class Client:
+class Parser:
     """
-    Client is responsible for managing cryptocurrency metadata
+    Parser is responsible for managing cryptocurrency metadata
         and providing utility methods.
 
     Methods:
@@ -24,7 +24,7 @@ class Client:
 
     def check_trading_pair_exists(self, trading_pair: str):
         """
-        Get the full name of a trading pair.
+        Check if given trading pair exists in metadata.
 
         Arguments:
             trading_pair (str): The abbreviated trading pair (e.g., "BTCUSDT").
@@ -36,9 +36,19 @@ class Client:
         else:
             return False
 
-    def get_interval(self, interval):
+    def check_interval_exists(self, interval: str):
         """
-        Get the interval duration in milliseconds for a given interval string.
+        Check if given trading pair exists in metadata.
+
+        Arguments:
+            interval (str): The interval abbreviation (e.g., "1h", "5m").
+        """
+        intervals = self.metadata.get("intervals", {})
+        return True if intervals.get(interval, False) else False
+
+    def get_interval_jump(self, interval: str):
+        """
+        Get the interval jump duration in milliseconds.
 
         Arguments:
             interval: The interval string (e.g., "1h" for 1-hour).

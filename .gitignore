@@ -2,7 +2,6 @@
 notes.md
 poetry.lock
 vs.code-workspace
-notebook.ipynb
 
 # directories
 dist/
