@@ -5,7 +5,9 @@ import pandas as pd
 import requests
 
 from . import logger
+from . import metadata
 from concurrent.futures import ThreadPoolExecutor
+from .progress_bar_wrapper import ProgressBarWrapper
 
 
 class Retriever:
@@ -19,6 +21,7 @@ class Retriever:
     """
     def __init__(self, binypt):
         self.binypt = binypt
+        self.bar = None
 
     def run(self):
         """
@@ -32,7 +35,7 @@ class Retriever:
 
     def _interpolate_timelines(self):
         logger.debug("Interpolating timelines...")
-        jump = self.binypt.metadata.get_interval_jump(self.binypt.interval)
+        jump = metadata.get_interval_jump(self.binypt.interval)
         current_timeline = self.binypt.open_time - jump
 
         while current_timeline + jump < self.binypt.close_time:
@@ -73,12 +76,13 @@ class Retriever:
             self._cache()
             batch.clear()
 
-        self.binypt.bar.finish()
+        self.bar.finish()
         self._clear_cache()
         logger.debug("Batched timelines are downloaded.")
 
     def _set_up_bar(self):
-        self.binypt.bar.start(
+        self.bar = ProgressBarWrapper(self.binypt.bar_active)
+        self.bar.start(
             message="Downloaded: ",
             suffix=" retrieved %(index)d/%(max)d",
             max=self.timelines_size,
@@ -95,7 +99,7 @@ class Retriever:
         return [api_url.format(timeline[0], timeline[1]) for timeline in batch]
 
     def _download_batch(self, timeline_ix, urls):
-        self.binypt.bar.next()
+        self.bar.next()
 
         while True:
             thread_pool = ThreadPoolExecutor(max_workers=os.cpu_count())
@@ -108,7 +112,7 @@ class Retriever:
                 )
 
                 for request in api_requests:
-                    self.binypt.bar.next()
+                    self.bar.next()
                     while request._state == "RUNNING":
                         time.sleep(0.1)
 
@@ -124,7 +128,7 @@ class Retriever:
                     f"Error while downloading batch #{timeline_ix}: "
                     f"{str(error)}",
                 )
-                self.binypt.bar.goto(
+                self.bar.goto(
                     0 if timeline_ix <= 1000
                     else timeline_ix - 1000
                 )
@@ -135,7 +139,7 @@ class Retriever:
         flattened_batch = np.concatenate(downloaded_batch)
         batch_dataframe = pd.DataFrame(
             flattened_batch,
-            columns=self.binypt.metadata.get_chart_columns(),
+            columns=metadata.get_chart_columns(),
         ).astype(float)
 
         return batch_dataframe

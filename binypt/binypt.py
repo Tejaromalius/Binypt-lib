@@ -4,9 +4,8 @@ import pandas as pd
 import datetime
 
 from . import logger
+from . import metadata
 from .retriever import Retriever
-from .metadata.parser import Parser as MetadataParser
-from .progress_bar_wrapper import ProgressBarWrapper
 
 
 class Decorators:
@@ -22,14 +21,18 @@ class Decorators:
 
         return wrapper
 
-    def run_if_data_retrieved(method):
+    def run_if_retrieved_data(method):
         def wrapper(self, *args, **kwargs):
             assert len(self.data) != 0, "No data set to operate on!"
             return method(self, *args, **kwargs)
 
         return wrapper
 
-    def run_if_arguments_valid(method):
+    def run_if_valid_arguments(method):
+        """
+        Checks whether all given arguments are valid or not. In case of
+        failure, ValueError is raised.
+        """
         def wrapper(
             self,
             trading_pair: str,
@@ -37,19 +40,10 @@ class Decorators:
             open_date: str,
             close_date: str,
         ):
-            tp_exists = self.metadata.check_trading_pair_exists(trading_pair)
-            assert tp_exists is True, \
-                "Trading pair is not found in the metadata!"
-
-            assert self.metadata.check_interval_exists(interval) is not None, \
-                "Interval is invalid!"
-
-            assert self.metadata.get_date_timestamp(open_date) is not None, \
-                "Start date is of wrong format!"
-
-            assert self.metadata.get_date_timestamp(close_date) is not None, \
-                "Start date is of wrong format!"
-
+            metadata.trading_pair_exists(trading_pair)
+            metadata.interval_exists(interval)
+            metadata.date_is_correct_format(open_date)
+            metadata.date_is_correct_format(close_date)
             return method(self, trading_pair, interval, open_date, close_date)
 
         return wrapper
@@ -60,7 +54,6 @@ class Binypt:
     Binypt is a library for fetching cryptocurrency price data from Binance.
 
     Methods:
-    __init__(): Initialize Binypt object.
     set_arguments(): Set trading pair, interval, open date, and close date.
     retrieve_data(): Fetch cryptocurrency price data from Binance API.
     export(): Export downloaded data to a file.
@@ -69,17 +62,14 @@ class Binypt:
     """
 
     def __init__(self):
-        self.metadata = MetadataParser()
-        self.retriever = Retriever(self)
-        self.bar = ProgressBarWrapper()
-
+        self.bar_active = False
         self.timelines = list()
         self.data = pd.DataFrame(
-            columns=self.metadata.get_chart_columns(),
+            columns=metadata.get_chart_columns(),
             dtype=float,
         )
 
-    @Decorators.run_if_arguments_valid
+    @Decorators.run_if_valid_arguments
     def set_arguments(
         self,
         trading_pair: str,
@@ -99,22 +89,23 @@ class Binypt:
 
         self.interval = interval
         self.trading_pair = trading_pair
-        self.open_time = self.metadata.get_date_timestamp(open_date)
-        self.close_time = self.metadata.get_date_timestamp(close_date)
+        self.open_time = metadata.get_date_timestamp(open_date)
+        self.close_time = metadata.get_date_timestamp(close_date)
         logger.info("API arguments are set")
 
     @Decorators.run_if_arguments_set
     def retrieve_data(self):
         """ Fetch cryptocurrency price data from Binance API. """
         logger.debug("Fetching new data from Binance API")
+        self.retriever = Retriever(self)
         self.retriever.run()
         logger.info("Data is downloaded and set")
 
-    @Decorators.run_if_data_retrieved
+    @Decorators.run_if_retrieved_data
     def get_data(self):
         return self.data
 
-    @Decorators.run_if_data_retrieved
+    @Decorators.run_if_retrieved_data
     def export(self, output_path: str):
         """
         Export downloaded data to a file.
@@ -143,18 +134,17 @@ class Binypt:
         else:
             assert "Output path does not specify a file format!"
 
-    @Decorators.run_if_data_retrieved
+    @Decorators.run_if_retrieved_data
     def add_human_readable_time(self):
         """ Add human-readable timestamps to the data. """
-        miliseconds = 1000
-        self.data["open_date"] = [
-            datetime.datetime.fromtimestamp(open_time / miliseconds)
-            for open_time in self.data["open_time"]
-        ]
-        self.data["close_date"] = [
-            datetime.datetime.fromtimestamp(close_time / miliseconds)
-            for close_time in self.data["close_time"]
-        ]
+        def get_date_from_column(column_name):
+            return list(
+                datetime.datetime.fromtimestamp(timestamp / 1000)
+                for timestamp in self.data[f"{column_name}"]
+            )
+
+        self.data["open_date"] = get_date_from_column("open_time")
+        self.data["close_date"] = get_date_from_column("close_time")
         logger.debug("Human-readable timestamp is added to data")
 
     def set_verbosity(self, show_bar: bool = False, show_log: bool = False):
@@ -167,6 +157,6 @@ class Binypt:
             show_log (bool, optional): Whether to show log messages.
                 Default is False.
         """
-        self.bar.change_status(True if show_bar else False)
+        self.bar_active = True if show_bar else False
         if show_log:
             logger.enable("binypt")
