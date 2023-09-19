@@ -40,9 +40,6 @@ def date_is_correct_format(date: str):
         date: The date string to be checked.
     """
     date_format = metadata.get("date_format")
-    try:
-        datetime.datetime.strptime(date, date_format).timestamp()
-        logger.debug(f"`{date}` is of valid format.")
-    except ValueError:
-        logger.error(f"`{date}` is of invalid format!")
+    datetime.datetime.strptime(date, date_format).timestamp()
+    logger.debug(f"`{date}` is of valid format.")
     return date
