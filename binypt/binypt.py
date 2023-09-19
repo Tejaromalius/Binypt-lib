@@ -128,7 +128,7 @@ class Binypt:
                 self.data.to_excel(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
 
-            elif file_format == "pickle":
+            elif file_format == "pkl":
                 self.data.to_pickle(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
         else:
