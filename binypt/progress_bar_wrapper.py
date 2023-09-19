@@ -20,6 +20,8 @@ class ProgressBarWrapper(Bar):
         start(): Start the progress bar with a specified size.
     """
     def __init__(self, is_active: bool = False):
+        super().__init__()
+
         self.is_active = is_active
         self._update_masks()
 
