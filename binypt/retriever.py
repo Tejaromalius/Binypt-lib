@@ -85,7 +85,7 @@ class Retriever:
         self.bar.start(
             message="Downloaded: ",
             suffix=" retrieved %(index)d/%(max)d",
-            max=self.timelines_size,
+            max=self.timelines_size - 1,
         )
 
     def _get_formatted_links(self, batch):
@@ -99,8 +99,6 @@ class Retriever:
         return [api_url.format(timeline[0], timeline[1]) for timeline in batch]
 
     def _download_batch(self, timeline_ix, urls):
-        self.bar.next()
-
         while True:
             thread_pool = ThreadPoolExecutor(max_workers=os.cpu_count())
             try:
