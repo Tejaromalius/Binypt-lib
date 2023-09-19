@@ -13,8 +13,9 @@ class Parser:
         and providing utility methods.
 
     Methods:
-        check_trading_pair_exists(): Get the full name of a trading pair.
-        get_interval(): Get the interval duration in milliseconds.
+        check_trading_pair_exists(): Check the trading pair's existence.
+        check_interval_exists(): Validate the given chart interval existence.
+        get_interval_jump(): Get the interval jump duration in milliseconds.
         get_chart_columns(): Get the column names for price chart data.
         get_date_timestamp(): Convert a date to a timestamp in milliseconds.
     """
