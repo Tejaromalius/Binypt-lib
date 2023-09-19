@@ -15,6 +15,7 @@ def trading_pair_exists(trading_pair: str):
     if not trading_pairs.count(trading_pair):
         raise ValueError(f"`{trading_pair}` not found in metadata!")
     logger.debug(f"Trading pair `{trading_pair}` is valid.")
+    return trading_pair
 
 
 def interval_exists(interval: str):
@@ -28,6 +29,7 @@ def interval_exists(interval: str):
     if not intervals.get(interval, False):
         raise ValueError(f"`{interval}` not found in metadata!")
     logger.debug(f"Interval `{interval}` is valid.")
+    return interval
 
 
 def date_is_correct_format(date: str):
@@ -43,3 +45,4 @@ def date_is_correct_format(date: str):
         logger.debug(f"`{date}` is of valid format.")
     except ValueError:
         logger.error(f"`{date}` is of invalid format!")
+    return date
