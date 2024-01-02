@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "binypt-lib"
-version = "2.3.6a1"
+version = "2.3.7"
 description = "Library to download data charts from Binance"
 authors = ["ilia tayefi <tayefi.ilia@protonmail.com>"]
 license = "MIT"

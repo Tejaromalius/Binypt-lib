@@ -116,7 +116,7 @@ class Binypt:
         """
         output_path = os.path.expanduser(output_path)
         logger.debug(f"Output file specified as: {output_path}")
-        file_format = re.search("(csv)|(xlxs)|(pickle)$", output_path)
+        file_format = re.search("(csv)|(xlsx)|(pickle)$", output_path)
 
         if file_format is not None:
             file_format = file_format.group()
@@ -124,7 +124,7 @@ class Binypt:
                 self.data.to_csv(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
 
-            elif file_format == "xlxs":
+            elif file_format == "xlsx":
                 self.data.to_excel(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
 
