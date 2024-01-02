@@ -118,8 +118,6 @@ class Binypt:
         logger.debug(f"Output file specified as: {output_path}")
         file_format = re.search("(csv)|(xlxs)|(pickle)$", output_path)
 
-        print(file_format.group())
-
         if file_format is not None:
             file_format = file_format.group()
             if file_format == "csv":

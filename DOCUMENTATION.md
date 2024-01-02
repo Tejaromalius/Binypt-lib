@@ -62,7 +62,7 @@ Once you have set up the data retrieval parameters, you can fetch cryptocurrency
 binypt.retrieve_data()
 ```
 
-> Binypt library automatically caches downloaded data to `.data_cache.pkl` while fetching upcoming batches. In case of an error, use `pandas.read_pickle()` function to read the partially downloaded data. 
+> Binypt library automatically caches downloaded data to `.data_cache.pickle` while fetching upcoming batches. In case of an error, use `pandas.read_pickle()` function to read the partially downloaded data. 
 
 ### 5. Exporting Data
 
