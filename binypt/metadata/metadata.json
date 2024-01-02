@@ -1,5 +1,5 @@
 {
-    "date_format": "%Y-%m-%d/%H:%M:%S",
+    "date_format": "%d/%m/%Y-%H:%M:%S",
     "chart_columns": [
         "open_time",
         "open",

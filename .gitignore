@@ -1,6 +1,5 @@
 # files
 poetry.lock
-vs.code-workspace
 
 # directories
-.condanv/
+**/__pycache__/

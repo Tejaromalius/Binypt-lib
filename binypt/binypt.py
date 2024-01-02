@@ -62,12 +62,12 @@ class Binypt:
     """
 
     def __init__(self):
-        self.bar_active = False
-        self.timelines = list()
-        self.data = pd.DataFrame(
-            columns=metadata.get_chart_columns(),
-            dtype=float,
-        )
+      self.bar_active = False
+      self.timelines = list()
+      self.data = pd.DataFrame(
+          columns=metadata.get_chart_columns(),
+          dtype=float,
+      )
 
     @Decorators.run_if_valid_arguments
     def set_arguments(
@@ -95,15 +95,15 @@ class Binypt:
 
     @Decorators.run_if_arguments_set
     def retrieve_data(self):
-        """ Fetch cryptocurrency price data from Binance API. """
-        logger.debug("Fetching new data from Binance API")
-        self.retriever = Retriever(self)
-        self.retriever.run()
-        logger.info("Data is downloaded and set")
+      """ Fetch cryptocurrency price data from Binance API. """
+      logger.debug("Fetching new data from Binance API")
+      self.retriever = Retriever(self)
+      self.retriever.run()
+      logger.info("Data is downloaded and set")
 
     @Decorators.run_if_retrieved_data
     def get_data(self):
-        return self.data
+      return self.data
 
     @Decorators.run_if_retrieved_data
     def export(self, output_path: str):
@@ -116,7 +116,9 @@ class Binypt:
         """
         output_path = os.path.expanduser(output_path)
         logger.debug(f"Output file specified as: {output_path}")
-        file_format = re.search("(csv)|(excel)|(pickle)$", output_path)
+        file_format = re.search("(csv)|(xlxs)|(pickle)$", output_path)
+
+        print(file_format.group())
 
         if file_format is not None:
             file_format = file_format.group()
@@ -124,11 +126,11 @@ class Binypt:
                 self.data.to_csv(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
 
-            elif file_format == "excel":
+            elif file_format == "xlxs":
                 self.data.to_excel(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
 
-            elif file_format == "pkl":
+            elif file_format == "pickle":
                 self.data.to_pickle(output_path)
                 logger.debug(f"Data is written to `{output_path}`")
         else:
